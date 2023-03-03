@@ -2,6 +2,7 @@ import * as React from 'react';
 import axios from 'axios';
 import { useEffect, useState, useRef } from 'react';
 import DOMHelper from '../helpers/dom-helper.js';
+import editorText from './editor-text/editor-text.js';
 import "../../src/helpers/iframeLoader.js";
 
 export default function Editor() {
@@ -14,6 +15,7 @@ export default function Editor() {
     const virtualDom = useRef(null)
 
     const {parseStrToDOM, wrapTextNodes, serializeDOMToString,unwrapTextNodes} = DOMHelper();
+    const {onTextEdit} = editorText();
 
     useEffect(() => {
         init(currentPage);
@@ -39,6 +41,7 @@ export default function Editor() {
             .then(html => axios.post("./api/saveTempPage.php", {html}))
             .then(() => iframe.current.load("../temp.html"))
             .then(() => enableEditing())
+            .then(() => injectStyles())
     }
 
     const save = () => {
@@ -50,18 +53,33 @@ export default function Editor() {
     }
 
     const enableEditing = () => {
-        iframe.current.contentDocument.body.querySelectorAll("text-editor").forEach(element => {
+        /* iframe.current.contentDocument.body.querySelectorAll("text-editor").forEach(element => {
             element.contentEditable = "true";
             element.addEventListener("input", () => {
                 onTextEdit(element);
             })
+        }) */
+        iframe.current.contentDocument.body.querySelectorAll("text-editor").forEach(element => {
+            const id = element.getAttribute("nodeid");
+            const virtualElement = virtualDom.current.body.querySelector(`[nodeid="${id}"]`).innerHTML = element.innerHTML;
+            
+            onTextEdit(element, virtualElement);
         })
     }
 
-    const onTextEdit = (element) => {
-        const id = element.getAttribute("nodeid");
-
-        virtualDom.current.body.querySelector(`[nodeid="${id}"]`).innerHTML = element.innerHTML;
+    const injectStyles = () => {
+        const style = iframe.current.contentDocument.createElement("style");
+        style.innerHTML=`
+            text-editor:hover {
+                outline: 3px solid orange;
+                outline-offset: 8px;
+            }
+            text-editor:focus {
+                outline: 3px solid red;
+                outline-offset: 8px;
+            }
+        `
+        iframe.current.contentDocument.head.appendChild(style);
     }
 
     const loadPageList = () => {
