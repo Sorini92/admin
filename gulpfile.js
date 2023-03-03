@@ -2,7 +2,7 @@ const gulp = require("gulp");
 const webpack = require("webpack-stream");
 const sass = require("gulp-sass");
 
-const dist = "/Applications/MAMP/htdocs/react_admin/admin";
+const dist = "W:/domains/adminreact/admin";
 
 gulp.task("copy-html", () => {
     return gulp.src("./app/src/index.html")

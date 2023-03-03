@@ -56,13 +56,13 @@ export default function Editor() {
         /* iframe.current.contentDocument.body.querySelectorAll("text-editor").forEach(element => {
             element.contentEditable = "true";
             element.addEventListener("input", () => {
-                onTextEdit(element);
+                const id = element.getAttribute("nodeid");
+                virtualDom.current.body.querySelector(`[nodeid="${id}"]`).innerHTML = element.innerHTML;
             })
         }) */
         iframe.current.contentDocument.body.querySelectorAll("text-editor").forEach(element => {
             const id = element.getAttribute("nodeid");
-            const virtualElement = virtualDom.current.body.querySelector(`[nodeid="${id}"]`).innerHTML = element.innerHTML;
-            
+            let virtualElement = virtualDom.current.body.querySelector(`[nodeid="${id}"]`);
             onTextEdit(element, virtualElement);
         })
     }
@@ -71,10 +71,12 @@ export default function Editor() {
         const style = iframe.current.contentDocument.createElement("style");
         style.innerHTML=`
             text-editor:hover {
+                z-index: 10;
                 outline: 3px solid orange;
                 outline-offset: 8px;
             }
             text-editor:focus {
+                z-index: 10;
                 outline: 3px solid red;
                 outline-offset: 8px;
             }

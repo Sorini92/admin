@@ -23,6 +23,8 @@ const editorText = () => {
         });
 
         element.addEventListener("input", () => {
+            console.log(element)
+            console.log(virtualElement)
             virtualElement.innerHTML = element.innerHTML;
         });
 
