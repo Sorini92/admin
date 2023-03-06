@@ -2,11 +2,10 @@ import * as React from 'react';
 import axios from 'axios';
 import { useEffect, useState, useRef } from 'react';
 import DOMHelper from '../../helpers/dom-helper.js';
-import editorText from '../editor-text/editor-text.js';
+import editorText from '../editor-text/editor-text';
 import "../../helpers/iframeLoader.js";
 import UIkit from 'uikit';
-import Spinner from '../spinner';
-
+import Spinner from '../spinner/spinner';
 
 export default function Editor() {
 
@@ -129,8 +128,8 @@ export default function Editor() {
 
     return (
         <>
-            <iframe src={currentPage} ref={iframe}></iframe>
-
+            {/* <iframe src={currentPage} ref={iframe}></iframe> */}
+            {!loading ? <iframe src={currentPage} ref={iframe}></iframe> : <iframe style={{visibility: "hidden"}} src={currentPage} ref={iframe}></iframe>}
             {loading ? <Spinner active/> : <Spinner/>}
 
             <div className='panel'>
