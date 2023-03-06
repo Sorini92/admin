@@ -1,18 +1,23 @@
 import * as React from 'react';
 import axios from 'axios';
 import { useEffect, useState, useRef } from 'react';
-import DOMHelper from '../helpers/dom-helper.js';
-import editorText from './editor-text/editor-text.js';
-import "../../src/helpers/iframeLoader.js";
+import DOMHelper from '../../helpers/dom-helper.js';
+import editorText from '../editor-text/editor-text.js';
+import "../../helpers/iframeLoader.js";
+import UIkit from 'uikit';
+import Spinner from '../spinner';
+
 
 export default function Editor() {
 
     const [pageList, setPageList] = useState([]);
     const [newPageName, setNewPageName] = useState("");
     const [currentPage, setCurrentPage] = useState("index.html");
+    const [loading, setLoading] = useState(true);
 
     const iframe = useRef(null)
     const virtualDom = useRef(null)
+    const modal = useRef(true);
 
     const {parseStrToDOM, wrapTextNodes, serializeDOMToString,unwrapTextNodes} = DOMHelper();
     const {onTextEdit} = editorText();
@@ -22,11 +27,11 @@ export default function Editor() {
     }, [])
 
     const init = (page) => {
-        open(page);
+        open(page, isLoaded);
         loadPageList();
     }
 
-    const open = (page) => {
+    const open = (page, callback) => {
         setCurrentPage(page);
         
         axios
@@ -42,24 +47,22 @@ export default function Editor() {
             .then(() => iframe.current.load("../temp.html"))
             .then(() => enableEditing())
             .then(() => injectStyles())
+            .then(callback)
     }
 
-    const save = () => {
+    const save = (onSuccess, onError) => {
+        isLoading();
         const newDom = virtualDom.current.cloneNode(virtualDom);
         unwrapTextNodes(newDom);
         const html = serializeDOMToString(newDom);
         axios
             .post("./api/savePage.php", {pageName: currentPage, html})
+            .then(onSuccess)
+            .catch(onError)
+            .finally(isLoaded)
     }
 
     const enableEditing = () => {
-        /* iframe.current.contentDocument.body.querySelectorAll("text-editor").forEach(element => {
-            element.contentEditable = "true";
-            element.addEventListener("input", () => {
-                const id = element.getAttribute("nodeid");
-                virtualDom.current.body.querySelector(`[nodeid="${id}"]`).innerHTML = element.innerHTML;
-            })
-        }) */
         iframe.current.contentDocument.body.querySelectorAll("text-editor").forEach(element => {
             const id = element.getAttribute("nodeid");
             let virtualElement = virtualDom.current.body.querySelector(`[nodeid="${id}"]`);
@@ -116,15 +119,44 @@ export default function Editor() {
         )
     });
 
+    const isLoading = () => {
+        setLoading(true);
+    }
+
+    const isLoaded = () => {
+        setLoading(false);
+    }
+
     return (
         <>
-            <button onClick={() => save()}>Click</button>
             <iframe src={currentPage} ref={iframe}></iframe>
-            {/* <input
-                onChange={(e) => setNewPageName(e.target.value)} 
-                type="text"/>
-            <button onClick={createNewPage}>Создать страницу</button>
-            {pages} */}
+
+            {loading ? <Spinner active/> : <Spinner/>}
+
+            <div className='panel'>
+                <button className='uk-button uk-button-primary' uk-toggle="target: #modal-save">Опубликовать</button>
+            </div>
+
+            <div id="modal-save" uk-modal={modal.toString()}>
+                <div className="uk-modal-dialog uk-modal-body">
+                    <h2 className="uk-modal-title">Сохранение</h2>
+                    <p>Вы действительно хотите сохранить изменения?</p>
+                    <p className="uk-text-right">
+                        <button className="uk-button uk-button-default uk-modal-close" type="button">Отменить</button>
+                        <button 
+                            className="uk-button uk-button-primary uk-modal-close" 
+                            type="button" 
+                            onClick={() => save(() => {
+                                UIkit.notification({message: 'Успешно сохранено', status: 'success'})
+                            },
+                            () => {
+                                UIkit.notification({message: 'Ошибка сохранения', status: 'danger'})
+                            })}>
+                                Опубликовать
+                        </button>
+                    </p>
+                </div>
+            </div>
         </>
     )
 }

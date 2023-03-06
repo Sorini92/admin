@@ -1,11 +1,5 @@
 const editorText = () => {
 
-    /* const onTextEdit = (element) => {
-        const id = element.getAttribute("nodeid");
-
-        virtualDom.current.body.querySelector(`[nodeid="${id}"]`).innerHTML = element.innerHTML;
-    } */
-
     const onTextEdit = (element, virtualElement) => {
         element.addEventListener("click", () => {
             element.contentEditable = "true";
