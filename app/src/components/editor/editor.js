@@ -6,6 +6,8 @@ import editorText from '../editor-text/editor-text';
 import "../../helpers/iframeLoader.js";
 import UIkit from 'uikit';
 import Spinner from '../spinner/spinner';
+import ConfirmModal from '../confirm-modal/confirm-modal.js';
+import ChooseModal from '../choose-modal/choose-modal.js';
 
 export default function Editor() {
 
@@ -22,10 +24,14 @@ export default function Editor() {
     const {onTextEdit} = editorText();
 
     useEffect(() => {
-        init(currentPage);
+        init(null, currentPage);
     }, [])
 
-    const init = (page) => {
+    const init = (e, page) => {
+        if (e) {
+            e.preventDefault();
+        }
+        isLoading();
         open(page, isLoaded);
         loadPageList();
     }
@@ -43,7 +49,8 @@ export default function Editor() {
             })
             .then(serializeDOMToString)
             .then(html => axios.post("./api/saveTempPage.php", {html}))
-            .then(() => iframe.current.load("../temp.html"))
+            .then(() => iframe.current.load("../sdd22233sdsd.html"))
+            .then(() => axios.post("./api/deleteTempPage.php"))
             .then(() => enableEditing())
             .then(() => injectStyles())
             .then(callback)
@@ -88,7 +95,7 @@ export default function Editor() {
 
     const loadPageList = () => {
         axios
-            .get("./api")
+            .get("./api/pageList.php")
             .then(res => setPageList(res.data))
     }
 
@@ -133,29 +140,12 @@ export default function Editor() {
             {loading ? <Spinner active/> : <Spinner/>}
 
             <div className='panel'>
+                <button className='uk-button uk-button-primary uk-margin-small-right' uk-toggle="target: #modal-open">Открыть</button>
                 <button className='uk-button uk-button-primary' uk-toggle="target: #modal-save">Опубликовать</button>
             </div>
 
-            <div id="modal-save" uk-modal={modal.toString()}>
-                <div className="uk-modal-dialog uk-modal-body">
-                    <h2 className="uk-modal-title">Сохранение</h2>
-                    <p>Вы действительно хотите сохранить изменения?</p>
-                    <p className="uk-text-right">
-                        <button className="uk-button uk-button-default uk-modal-close" type="button">Отменить</button>
-                        <button 
-                            className="uk-button uk-button-primary uk-modal-close" 
-                            type="button" 
-                            onClick={() => save(() => {
-                                UIkit.notification({message: 'Успешно сохранено', status: 'success'})
-                            },
-                            () => {
-                                UIkit.notification({message: 'Ошибка сохранения', status: 'danger'})
-                            })}>
-                                Опубликовать
-                        </button>
-                    </p>
-                </div>
-            </div>
+            <ConfirmModal modal={modal} target={'modal-save'} method={save}/>
+            <ChooseModal modal={modal} target={'modal-open'} data={pageList} redirect={init}/>
         </>
     )
 }
