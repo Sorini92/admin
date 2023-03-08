@@ -8,11 +8,12 @@ import UIkit from 'uikit';
 import Spinner from '../spinner/spinner';
 import ConfirmModal from '../confirm-modal/confirm-modal.js';
 import ChooseModal from '../choose-modal/choose-modal.js';
+import Panel from '../panel/panel.js';
 
 export default function Editor() {
 
     const [pageList, setPageList] = useState([]);
-    const [newPageName, setNewPageName] = useState("");
+    const [backupsList, setBackupsList] = useState([]);
     const [currentPage, setCurrentPage] = useState("index.html");
     const [loading, setLoading] = useState(true);
 
@@ -34,6 +35,7 @@ export default function Editor() {
         isLoading();
         open(page, isLoaded);
         loadPageList();
+        loadBackupsList();
     }
 
     const open = (page, callback) => {
@@ -54,18 +56,22 @@ export default function Editor() {
             .then(() => enableEditing())
             .then(() => injectStyles())
             .then(callback)
+
+        loadBackupsList();
     }
 
-    const save = (onSuccess, onError) => {
+    const save = async (onSuccess, onError) => {
         isLoading();
         const newDom = virtualDom.current.cloneNode(virtualDom);
         unwrapTextNodes(newDom);
         const html = serializeDOMToString(newDom);
-        axios
+        await axios
             .post("./api/savePage.php", {pageName: currentPage, html})
             .then(onSuccess)
             .catch(onError)
             .finally(isLoaded)
+        
+        loadBackupsList();
     }
 
     const enableEditing = () => {
@@ -98,32 +104,29 @@ export default function Editor() {
             .get("./api/pageList.php")
             .then(res => setPageList(res.data))
     }
-
-    const createNewPage = () => {
+    
+    const loadBackupsList = () => {
         axios
-            .post("./api/createNewPage.php", {"name": newPageName})
-            .then(() => loadPageList())
-            .catch(() => alert("Страница уже существует!"));
+            .get("./backups/backups.json")
+            .then(res => setBackupsList(res.data.fillter(backup => {
+                return backup.page === currentPage
+            })))
     }
 
-    const deletePage = (page) => {
-        axios
-            .post("./api/deletePage.php", {"name": page})
-            .then(() => loadPageList())
-            .catch(() => alert("Страницы не существует!"));
+    const restoreBackup = (e, backup) => {
+        if (e) {
+            e.preventDefault();
+        }
+        UIkit.modal.confirm("Вы действительно хотите восстановить страницу из этой резервной копии? Все несохраненные данные будут утеряны!", {labels: {ok: 'Восстановить', cancel: "Отмена"}})
+        .then(() => {
+            isLoading();
+            return axios
+                    .post('./api/restoreBackup.php', {"page": currentPage, "file": backup});
+        })
+        .then(() => {
+            open(currentPage, isLoaded);
+        })
     }
-
-    const pages = pageList.map((page, i) => {
-        return (
-            <h1 key={i}>{page}
-                <a 
-                href="#"
-                onClick={() => deletePage(page)}>
-                    (x)
-                </a>
-            </h1>
-        )
-    });
 
     const isLoading = () => {
         setLoading(true);
@@ -136,16 +139,14 @@ export default function Editor() {
     return (
         <>
             {/* <iframe src={currentPage} ref={iframe}></iframe> */}
-            {!loading ? <iframe src={currentPage} ref={iframe}></iframe> : <iframe style={{visibility: "hidden"}} src={currentPage} ref={iframe}></iframe>}
+            {!loading ? <iframe src="" ref={iframe}></iframe> : <iframe style={{visibility: "hidden"}} src="" ref={iframe}></iframe>}
             {loading ? <Spinner active/> : <Spinner/>}
 
-            <div className='panel'>
-                <button className='uk-button uk-button-primary uk-margin-small-right' uk-toggle="target: #modal-open">Открыть</button>
-                <button className='uk-button uk-button-primary' uk-toggle="target: #modal-save">Опубликовать</button>
-            </div>
+            <Panel/>
 
             <ConfirmModal modal={modal} target={'modal-save'} method={save}/>
             <ChooseModal modal={modal} target={'modal-open'} data={pageList} redirect={init}/>
+            <ChooseModal modal={modal} target={'modal-backup'} data={backupsList} redirect={restoreBackup}/>
         </>
     )
 }
