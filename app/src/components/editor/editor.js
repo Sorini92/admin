@@ -108,7 +108,7 @@ export default function Editor() {
     const loadBackupsList = () => {
         axios
             .get("./backups/backups.json")
-            .then(res => setBackupsList(res.data.fillter(backup => {
+            .then(res => setBackupsList(res.data.filter(backup => {
                 return backup.page === currentPage
             })))
     }
