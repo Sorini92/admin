@@ -9,6 +9,7 @@ import Spinner from '../spinner/spinner';
 import ConfirmModal from '../confirm-modal/confirm-modal.js';
 import ChooseModal from '../choose-modal/choose-modal.js';
 import Panel from '../panel/panel.js';
+import EditorMeta from '../editor-meta.js/editor-meta.js';
 
 export default function Editor() {
 
@@ -147,6 +148,7 @@ export default function Editor() {
             <ConfirmModal modal={modal} target={'modal-save'} method={save}/>
             <ChooseModal modal={modal} target={'modal-open'} data={pageList} redirect={init}/>
             <ChooseModal modal={modal} target={'modal-backup'} data={backupsList} redirect={restoreBackup}/>
+            {virtualDom ? <EditorMeta  modal={modal} target={'modal-meta'} virtualDom={virtualDom}/> : false}
         </>
     )
 }
