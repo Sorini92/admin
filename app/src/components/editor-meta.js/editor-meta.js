@@ -1,17 +1,13 @@
-import { apply } from "core-js/fn/reflect";
 import React from "react";
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
-const EditorMeta = ({modal, target}) => {
+const EditorMeta = ({modal, target, virtualDom}) => {
 
     const [meta, setMeta] = useState({
         title: '',
         keywords: '',
         description: ''
     });
-    /* const [title, setTitle] = useState("");
-    const [keywords, setKeywords] = useState("");
-    const [description, setDescription] = useState(""); */
 
     const title = useRef(null);
     const keywords = useRef(null);
@@ -37,11 +33,10 @@ const EditorMeta = ({modal, target}) => {
             description.current.setAttribute("name", "description");
             description.current.setAttribute("content", "");
         }
-
         setMeta({
-            title: title.innerHTML,
-            keywords: keywords.getAttribute("content"),
-            description: description.getAttribute("content")
+            title: title.current.innerHTML,
+            keywords: keywords.current.getAttribute("content"),
+            description: description.current.getAttribute("content")
         })
     }
 
@@ -97,7 +92,7 @@ const EditorMeta = ({modal, target}) => {
                             className="uk-input" 
                             type="text" placeholder="Title" 
                             aria-label="Input" 
-                            value={title}
+                            value={meta.title}
                             onChange={(e) => onValueChange(e)}/>
                     </div>
 
@@ -107,17 +102,17 @@ const EditorMeta = ({modal, target}) => {
                             className="uk-textarea" 
                             rows="5" placeholder="Keywords" 
                             aria-label="Textarea" 
-                            value={keywords}
+                            value={meta.keywords}
                             onChange={(e) => onValueChange(e)}>
                         </textarea>
                     </div>
-                    <div class="uk-margin">
+                    <div className="uk-margin">
                         <textarea 
                             data-description
                             className="uk-textarea" 
                             rows="5" placeholder="Description" 
                             aria-label="Textarea" 
-                            value={description}
+                            value={meta.description}
                             onChange={(e) => onValueChange(e)}>
                         </textarea>
                     </div>

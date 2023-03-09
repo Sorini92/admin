@@ -63,7 +63,7 @@ export default function Editor() {
 
     const save = async (onSuccess, onError) => {
         isLoading();
-        const newDom = virtualDom.current.cloneNode(virtualDom);
+        const newDom = virtualDom.current.cloneNode(virtualDom.current);
         unwrapTextNodes(newDom);
         const html = serializeDOMToString(newDom);
         await axios
@@ -148,7 +148,7 @@ export default function Editor() {
             <ConfirmModal modal={modal} target={'modal-save'} method={save}/>
             <ChooseModal modal={modal} target={'modal-open'} data={pageList} redirect={init}/>
             <ChooseModal modal={modal} target={'modal-backup'} data={backupsList} redirect={restoreBackup}/>
-            {virtualDom ? <EditorMeta  modal={modal} target={'modal-meta'} virtualDom={virtualDom}/> : false}
+            {virtualDom.current ? <EditorMeta  modal={modal} target={'modal-meta'} virtualDom={virtualDom.current}/> : false}
         </>
     )
 }
