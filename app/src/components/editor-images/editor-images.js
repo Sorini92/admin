@@ -7,7 +7,7 @@ const EditorImages = () => {
 
         element.addEventListener('click', () => {
             imgUploader.click();
-            imgUploader.addEventListener("onChange", () => {
+            imgUploader.addEventListener("change", () => {
                 if (imgUploader.files && imgUploader.files[0]) {
                     let formData = new FormData();
                     formData.append("image", imgUploader.files[0]);
