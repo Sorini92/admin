@@ -42,11 +42,26 @@ const DOMHelper = () => {
         })
     }
 
+    const wrapImages = (dom) => {
+        dom.body.querySelectorAll('img').forEach((img, i) => {
+            img.setAttribute('editableimgid', i);
+        })
+        return dom;
+    }
+
+    const unwrapImages = (dom) => {
+        dom.body.querySelectorAll('[editableimgid]').forEach(img => {
+            img.removeAttribute('editableimgid');
+        })
+    }
+
     return {
         parseStrToDOM,
         wrapTextNodes,
         serializeDOMToString,
-        unwrapTextNodes
+        unwrapTextNodes,
+        wrapImages,
+        unwrapImages
     }
 }
 

@@ -10,6 +10,7 @@ import ConfirmModal from '../confirm-modal/confirm-modal.js';
 import ChooseModal from '../choose-modal/choose-modal.js';
 import Panel from '../panel/panel.js';
 import EditorMeta from '../editor-meta.js/editor-meta.js';
+import EditorImages from '../editor-images/editor-images.js';
 
 export default function Editor() {
 
@@ -22,8 +23,9 @@ export default function Editor() {
     const virtualDom = useRef(null)
     const modal = useRef(true);
 
-    const {parseStrToDOM, wrapTextNodes, serializeDOMToString,unwrapTextNodes} = DOMHelper();
+    const {parseStrToDOM, wrapTextNodes, serializeDOMToString, unwrapTextNodes, wrapImages, unwrapImages} = DOMHelper();
     const {onTextEdit} = editorText();
+    const {onImageEdit} = EditorImages();
 
     useEffect(() => {
         init(null, currentPage);
@@ -46,6 +48,7 @@ export default function Editor() {
             .get(`../${page}?rnd=${Math.random()}`)
             .then(res => parseStrToDOM(res.data))
             .then(wrapTextNodes)
+            .then(wrapImages)
             .then(dom => {
                 virtualDom.current = dom;
                 return dom;
@@ -61,15 +64,16 @@ export default function Editor() {
         loadBackupsList();
     }
 
-    const save = async (onSuccess, onError) => {
+    const save = async () => {
         isLoading();
         const newDom = virtualDom.current.cloneNode(virtualDom.current);
         unwrapTextNodes(newDom);
+        unwrapImages(newDom)
         const html = serializeDOMToString(newDom);
         await axios
             .post("./api/savePage.php", {pageName: currentPage, html})
-            .then(onSuccess)
-            .catch(onError)
+            .then(() => showNotifications('Успешно сохранено', 'success'))
+            .catch(() => showNotifications('Ошибка сохранения', 'danger'))
             .finally(isLoaded)
         
         loadBackupsList();
@@ -81,23 +85,35 @@ export default function Editor() {
             let virtualElement = virtualDom.current.body.querySelector(`[nodeid="${id}"]`);
             onTextEdit(element, virtualElement);
         })
+
+        iframe.current.contentDocument.body.querySelectorAll("[editableimgid]").forEach(element => {
+            const id = element.getAttribute("editableimgid");
+            let virtualElement = virtualDom.current.body.querySelector(`[editableimgid="${id}"]`);
+            onImageEdit(element, virtualElement, isLoading, isLoaded, showNotifications);
+        })
     }
 
     const injectStyles = () => {
         const style = iframe.current.contentDocument.createElement("style");
         style.innerHTML=`
             text-editor:hover {
-                z-index: 10;
                 outline: 3px solid orange;
                 outline-offset: 8px;
             }
             text-editor:focus {
-                z-index: 10;
                 outline: 3px solid red;
+                outline-offset: 8px;
+            }
+            [editableimgid]:hover {
+                outline: 3px solid orange;
                 outline-offset: 8px;
             }
         `
         iframe.current.contentDocument.head.appendChild(style);
+    }
+
+    const showNotifications = (message, status) => {
+        UIkit.notification({message, status});
     }
 
     const loadPageList = () => {
@@ -142,6 +158,8 @@ export default function Editor() {
             {/* <iframe src={currentPage} ref={iframe}></iframe> */}
             {!loading ? <iframe src="" ref={iframe}></iframe> : <iframe style={{visibility: "hidden"}} src="" ref={iframe}></iframe>}
             {loading ? <Spinner active/> : <Spinner/>}
+
+            <input id="img-upload" type="file" accept="image/*" style={{display: 'none'}}/>
 
             <Panel/>
 
