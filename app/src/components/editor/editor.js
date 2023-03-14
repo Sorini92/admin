@@ -19,6 +19,8 @@ export default function Editor() {
     const [backupsList, setBackupsList] = useState([]);
     const [currentPage, setCurrentPage] = useState("index.html");
     const [loading, setLoading] = useState(true);
+    const [loginError, setLoginError] = useState(false);
+    const [loginLengthError, setLoginLengthError] = useState(false);
 
     const iframe = useRef(null)
     const virtualDom = useRef(null)
@@ -40,15 +42,30 @@ export default function Editor() {
     const checkAuth = () => {
         axios
             .get("./api/checkAuth.php")
-            .then(res => authorization.current = res.data.auth)
+            .then(res => authorization.current = res.data.authorization)
     }
 
     const login = (password) => {
         if (password.length > 4) {
             axios
                 .post('./api/login.php', {"password": password})
-                .then(res => authorization.current = res.data.auth)
+                .then(res => {
+                    authorization.current = res.data.authorization;
+                    setLoginError(!res.data.authorization),
+                    setLoginLengthError(false);
+                })
+        } else {
+            setLoginError(false),
+            setLoginLengthError(true);
         }
+    }
+
+    const logout = () => {
+        axios
+            .get("./api/logout.php")
+            .then(() => {
+                window.location.replace("/");
+            })
     }
 
     const init = (e, page) => {
@@ -176,7 +193,7 @@ export default function Editor() {
     }
 
     if (!authorization.current) {
-        return <Login login={login}/>
+        return <Login login={login} lengthErr={loginLengthError} loginErr={loginError}/>
     }
 
     return (
@@ -191,7 +208,26 @@ export default function Editor() {
 
             <Panel/>
 
-            <ConfirmModal modal={modal} target={'modal-save'} method={save}/>
+            <ConfirmModal 
+                modal={modal} 
+                target={'modal-save'} 
+                method={save}
+                text={{
+                    title: "Сохранение",
+                    descr: "Вы действительно хотите сохранить изменения?",
+                    btn: "Опубликовать"
+                }}/>
+            
+            <ConfirmModal 
+                modal={modal} 
+                target={'modal-logout'} 
+                method={logout}
+                text={{
+                    title: "Выход",
+                    descr: "Вы действительно хотите выйти?",
+                    btn: "Выйти"
+                }}/>
+
             <ChooseModal modal={modal} target={'modal-open'} data={pageList} redirect={init}/>
             <ChooseModal modal={modal} target={'modal-backup'} data={backupsList} redirect={restoreBackup}/>
             {virtualDom.current ? <EditorMeta  modal={modal} target={'modal-meta'} virtualDom={virtualDom.current}/> : false}
