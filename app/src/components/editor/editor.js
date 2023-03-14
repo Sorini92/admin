@@ -11,6 +11,7 @@ import ChooseModal from '../choose-modal/choose-modal.js';
 import Panel from '../panel/panel.js';
 import EditorMeta from '../editor-meta.js/editor-meta.js';
 import EditorImages from '../editor-images/editor-images.js';
+import Login from '../login/login.js';
 
 export default function Editor() {
 
@@ -22,23 +23,44 @@ export default function Editor() {
     const iframe = useRef(null)
     const virtualDom = useRef(null)
     const modal = useRef(true);
+    const authorization = useRef(false);
 
     const {parseStrToDOM, wrapTextNodes, serializeDOMToString, unwrapTextNodes, wrapImages, unwrapImages} = DOMHelper();
     const {onTextEdit} = editorText();
     const {onImageEdit} = EditorImages();
 
     useEffect(() => {
-        init(null, currentPage);
+        checkAuth();
     }, [])
+
+    useEffect (() => {
+        init(null, currentPage);
+    }, [authorization])
+
+    const checkAuth = () => {
+        axios
+            .get("./api/checkAuth.php")
+            .then(res => authorization.current = res.data.auth)
+    }
+
+    const login = (password) => {
+        if (password.length > 4) {
+            axios
+                .post('./api/login.php', {"password": password})
+                .then(res => authorization.current = res.data.auth)
+        }
+    }
 
     const init = (e, page) => {
         if (e) {
             e.preventDefault();
         }
-        isLoading();
-        open(page, isLoaded);
-        loadPageList();
-        loadBackupsList();
+        if (authorization.current) {
+            isLoading();
+            open(page, isLoaded);
+            loadPageList();
+            loadBackupsList();
+        }
     }
 
     const open = (page, callback) => {
@@ -153,11 +175,17 @@ export default function Editor() {
         setLoading(false);
     }
 
+    if (!authorization.current) {
+        return <Login login={login}/>
+    }
+
     return (
         <>
             {/* <iframe src={currentPage} ref={iframe}></iframe> */}
             {!loading ? <iframe src="" ref={iframe}></iframe> : <iframe style={{visibility: "hidden"}} src="" ref={iframe}></iframe>}
             {loading ? <Spinner active/> : <Spinner/>}
+
+
 
             <input id="img-upload" type="file" accept="image/*" style={{display: 'none'}}/>
 
