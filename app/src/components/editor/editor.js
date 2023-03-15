@@ -117,7 +117,7 @@ export default function Editor() {
         
         loadBackupsList();
     }
-
+    
     const enableEditing = () => {
         iframe.current.contentDocument.body.querySelectorAll("text-editor").forEach(element => {
             const id = element.getAttribute("nodeid");

@@ -20,14 +20,6 @@ const editorText = () => {
             virtualElement.innerHTML = element.innerHTML;
         });
 
-        element.addEventListener("select", (e) => {
-            const selection = e.target.value.substring(
-                e.target.selectionStart,
-                e.target.selectionEnd
-            );
-            console.log(`You selected: ${selection}`);
-        });
-
         if (element.parentNode.nodeName === "A" || element.parentNode.nodeName === "BUTTON") {
             element.addEventListener("contextmenu", (e) => {
                 e.preventDefault();
