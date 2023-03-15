@@ -19,13 +19,13 @@ export default function Editor() {
     const [backupsList, setBackupsList] = useState([]);
     const [currentPage, setCurrentPage] = useState("index.html");
     const [loading, setLoading] = useState(true);
+    const [authorization, setAuthorization] = useState(false);
     const [loginError, setLoginError] = useState(false);
     const [loginLengthError, setLoginLengthError] = useState(false);
 
     const iframe = useRef(null)
     const virtualDom = useRef(null)
     const modal = useRef(true);
-    const authorization = useRef(false);
 
     const {parseStrToDOM, wrapTextNodes, serializeDOMToString, unwrapTextNodes, wrapImages, unwrapImages} = DOMHelper();
     const {onTextEdit} = editorText();
@@ -42,15 +42,15 @@ export default function Editor() {
     const checkAuth = () => {
         axios
             .get("./api/checkAuth.php")
-            .then(res => authorization.current = res.data.authorization)
+            .then(res => setAuthorization(res.data.authorization))
     }
-
+    
     const login = (password) => {
         if (password.length > 4) {
             axios
                 .post('./api/login.php', {"password": password})
                 .then(res => {
-                    authorization.current = res.data.authorization;
+                    setAuthorization(res.data.authorization);
                     setLoginError(!res.data.authorization),
                     setLoginLengthError(false);
                 })
@@ -72,7 +72,7 @@ export default function Editor() {
         if (e) {
             e.preventDefault();
         }
-        if (authorization.current) {
+        if (authorization) {
             isLoading();
             open(page, isLoaded);
             loadPageList();
@@ -192,7 +192,7 @@ export default function Editor() {
         setLoading(false);
     }
 
-    if (!authorization.current) {
+    if (!authorization) {
         return <Login login={login} lengthErr={loginLengthError} loginErr={loginError}/>
     }
 
@@ -206,10 +206,10 @@ export default function Editor() {
 
             <input id="img-upload" type="file" accept="image/*" style={{display: 'none'}}/>
 
-            <Panel/>
+            <Panel virtualDom={virtualDom.current}/>
 
             <ConfirmModal 
-                modal={modal} 
+                modal={modal.current} 
                 target={'modal-save'} 
                 method={save}
                 text={{
@@ -219,7 +219,7 @@ export default function Editor() {
                 }}/>
             
             <ConfirmModal 
-                modal={modal} 
+                modal={modal.current} 
                 target={'modal-logout'} 
                 method={logout}
                 text={{
@@ -227,10 +227,10 @@ export default function Editor() {
                     descr: "Вы действительно хотите выйти?",
                     btn: "Выйти"
                 }}/>
-
-            <ChooseModal modal={modal} target={'modal-open'} data={pageList} redirect={init}/>
-            <ChooseModal modal={modal} target={'modal-backup'} data={backupsList} redirect={restoreBackup}/>
-            {virtualDom.current ? <EditorMeta  modal={modal} target={'modal-meta'} virtualDom={virtualDom.current}/> : false}
+            
+            <ChooseModal modal={modal.current} target={'modal-open'} data={pageList} redirect={init}/>
+            <ChooseModal modal={modal.current} target={'modal-backup'} data={backupsList} redirect={restoreBackup}/>
+            {virtualDom.current ? <EditorMeta  modal={modal.current} target={'modal-meta'} virtualDom={virtualDom.current}/> : false}
         </>
     )
 }

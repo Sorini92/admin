@@ -2,7 +2,7 @@ import React from "react";
 import { useState, useRef, useEffect } from 'react';
 
 const EditorMeta = ({modal, target, virtualDom}) => {
-
+    
     const [meta, setMeta] = useState({
         title: '',
         keywords: '',
@@ -47,7 +47,7 @@ const EditorMeta = ({modal, target, virtualDom}) => {
     }
 
     const onValueChange = (e) => {
-        if(e.target.getAttribute("data-title")) {
+        if (e.target.getAttribute("data-title")) {
             e.persist();
             setMeta((prevState) => {
                 const newMeta = {
@@ -57,7 +57,7 @@ const EditorMeta = ({modal, target, virtualDom}) => {
 
                 return newMeta;
             })
-        } else if(e.target.getAttribute("data-keywords")) {
+        } else if (e.target.getAttribute("data-keywords")) {
             e.persist();
             setMeta((prevState) => {
                 const newMeta = {
@@ -81,10 +81,9 @@ const EditorMeta = ({modal, target, virtualDom}) => {
     }
 
     return (
-        <div id={target} uk-modal={modal.toString()}>
+        <div id={target} uk-modal={modal.toString()} container="false">
             <div className="uk-modal-dialog uk-modal-body">
                 <h2 className="uk-modal-title">Редактирование Meta-тэгов</h2>
-
                 <form>
                     <div className="uk-margin">
                         <input 

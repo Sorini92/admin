@@ -1,5 +1,4 @@
 import React from "react";
-import UIkit from "uikit";
 
 const ChooseModal = ({modal, target, data, redirect}) => {
 
@@ -37,7 +36,7 @@ const ChooseModal = ({modal, target, data, redirect}) => {
     }
 
     return (
-        <div id={target} uk-modal={modal.toString()}>
+        <div id={target} uk-modal={modal.toString()} container="false">
             <div className="uk-modal-dialog uk-modal-body">
                 <h2 className="uk-modal-title">Открыть</h2>
                 {message}

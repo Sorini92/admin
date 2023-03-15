@@ -11,10 +11,10 @@ const Login = ({login, loginErr, lengthErr}) => {
 
     let renderLogErr, renderLengthErr;
 
-    logErr ? renderLogErr = <span className="login-error">Введен неправильный пароль</span> : null;
+    loginErr ? renderLogErr = <span className="login-error">Введен неправильный пароль</span> : null;
 
     lengthErr ? renderLengthErr = <span className="login-error">Пароль должен быть длинее 4 символов</span> : null; 
-
+    
     return (
         <div className="login-container">
             <div className="login">
